@@ -6,6 +6,7 @@ import com.esnt.ferreconst.dto.response.company.CompanyResponseDto;
 import com.esnt.ferreconst.dto.response.ErrorResponseDto;
 import com.esnt.ferreconst.mapper.CompanyMapper;
 import com.esnt.ferreconst.model.AuthResponse;
+import com.esnt.ferreconst.model.company.Company;
 import com.esnt.ferreconst.model.company.CompanyPage;
 import com.esnt.ferreconst.model.TokenResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -150,7 +151,7 @@ public class CompanyService {
         return response.getBody();
     }
 
-    public CompanyResponseDto searchById(AuthResponse auth, String id) {
+    public Company searchById(AuthResponse auth, String id) {
         try {
             log.info("Buscando empresa por ID: " + id);
             CompanyResponseDto dto;
@@ -162,7 +163,7 @@ public class CompanyService {
                 auth.setRefreshToken(tokens.getRefreshToken());
                 dto = sendSearchByIdRequest(auth, id);
             }
-            return dto;
+            return mapper.toCompany(dto);
         } catch (HttpStatusCodeException e) {
             String message = e.getStatusText();
             String body = e.getResponseBodyAsString();
