@@ -134,7 +134,7 @@ a:hover {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    margin: auto 14px 14px;
+    margin: auto 14px 8px;
     padding: 10px;
     border: 1px solid rgba(191, 219, 254, .3);
     border-radius: 12px;
@@ -162,6 +162,16 @@ a:hover {
 
 .btn-logout:focus-visible {
     box-shadow: 0 0 0 3px rgba(191, 219, 254, .48);
+}
+
+.sidebar-version {
+    display: block;
+    margin: 0 14px 12px;
+    color: #a9c7f5;
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-align: center;
 }
 
 .sidebar-toggle,
@@ -893,10 +903,6 @@ input[type="text"]:focus {
 
     .sidebar-navigation {
         padding-inline: 10px;
-    }
-
-    .sidebar-footer {
-        margin: 0 10px 10px;
     }
 }
 

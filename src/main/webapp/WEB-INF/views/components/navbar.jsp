@@ -38,6 +38,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M10 5H5v14h5M14 8l4 4-4 4M18 12H9"/></svg>
         <span>Cerrar sesión</span>
     </a>
+    <span class="sidebar-version">Versión ${appVersion}</span>
 </aside>
 
 <div class="sidebar-backdrop" id="sidebar-backdrop" hidden></div>
