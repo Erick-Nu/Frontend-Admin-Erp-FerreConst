@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpSession;
-import java.util.Locale;
 
 @Controller
 public class CompanyController {
@@ -38,16 +37,6 @@ public class CompanyController {
         return "companies/index";
     }
 
-    @GetMapping("/companies/register")
-    public String registerCompanyForm(HttpSession session, Model model) {
-        AuthResponse auth = (AuthResponse) session.getAttribute("auth");
-        if (auth == null) {
-            return "redirect:/login";
-        }
-        model.addAttribute("user", auth.getUser());
-        return "companies/register";
-    }
-
     @PostMapping("/companies")
     public String createCompany(@RequestParam String ruc,
                                  @RequestParam String businessName,
@@ -58,47 +47,21 @@ public class CompanyController {
         if (auth == null) {
             return "redirect:/login";
         }
-        model.addAttribute("user", auth.getUser());
 
-        ruc = ruc.trim();
-        businessName = businessName.trim();
-        email = email.trim();
-        code = code.trim().toUpperCase(Locale.ROOT);
+        model.addAttribute("user", auth.getUser());
         model.addAttribute("ruc", ruc);
         model.addAttribute("businessName", businessName);
         model.addAttribute("email", email);
         model.addAttribute("code", code);
 
-        boolean hasValidationError = false;
-        if (!ruc.matches("\\d{13}")) {
-            model.addAttribute("rucError", "El RUC debe contener exactamente 13 dígitos.");
-            hasValidationError = true;
-        }
-        if (!code.matches("[A-Z]{2}\\d{2}")) {
-            model.addAttribute("codeError", "El código debe tener dos letras mayúsculas y dos números.");
-            hasValidationError = true;
-        }
-        if (businessName.isEmpty()) {
-            model.addAttribute("businessNameError", "Ingresa la razón social de la empresa.");
-            hasValidationError = true;
-        }
-        if (email.isEmpty()) {
-            model.addAttribute("emailError", "Ingresa el correo corporativo de la empresa.");
-            hasValidationError = true;
-        }
-        if (hasValidationError) {
-            model.addAttribute("error", "Revisa los campos señalados para continuar.");
-            return "companies/register";
-        }
-
         try {
             companyService.create(auth, ruc, businessName, email, code);
             return "redirect:/companies";
         } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
+            model.addAttribute("modalError", e.getMessage());
+            model.addAttribute("showRegisterModal", true);
+            model.addAttribute("companyPage", companyService.search(auth, null, 1));
+            return "companies/index";
         }
-        return "companies/register";
     }
-
-
 }

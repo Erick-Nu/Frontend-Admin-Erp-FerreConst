@@ -18,7 +18,7 @@
                 <h1>Empresas</h1>
                 <p>Registra y gestiona las empresas vinculadas al servicio.</p>
             </div>
-            <a class="companies-add-button" href="${pageContext.request.contextPath}/companies/register"><span aria-hidden="true">+</span>Agregar empresa</a>
+            <button type="button" class="companies-add-button" id="open-register-modal"><span aria-hidden="true">+</span>Agregar empresa</button>
         </header>
         <form class="companies-search-form" action="${pageContext.request.contextPath}/companies" method="get">
             <input type="search" id="company-search" name="query" value="<c:out value='${query}'/>" placeholder="RUC, código o razón social" aria-label="Buscar empresa">
@@ -116,6 +116,56 @@
             </section>
         </c:if>
     </div>
+
+    <!-- Modal de registro -->
+    <div class="modal-backdrop" id="register-modal" hidden>
+        <div class="modal" role="dialog" aria-labelledby="modal-title" aria-modal="true">
+            <div class="modal-header">
+                <h2 id="modal-title">Registrar empresa</h2>
+                <button type="button" class="modal-close" id="modal-close" aria-label="Cerrar">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="modal-register-form" action="${pageContext.request.contextPath}/companies" method="post">
+                    <c:choose>
+                        <c:when test="${not empty modalError and showRegisterModal}">
+                            <div id="modal-error" class="alert alert-error" role="alert"><c:out value="${modalError}"/></div>
+                        </c:when>
+                        <c:otherwise>
+                            <div id="modal-error" role="alert" hidden></div>
+                        </c:otherwise>
+                    </c:choose>
+                    <div class="company-form-grid">
+                        <div class="input-group company-register-full-field">
+                            <label for="modal-businessName">Razón social <span class="field-required" aria-hidden="true">*</span></label>
+                            <input type="text" id="modal-businessName" name="businessName" value="<c:out value='${businessName}'/>" autocomplete="organization" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="modal-ruc">RUC <span class="field-required" aria-hidden="true">*</span></label>
+                            <input type="text" id="modal-ruc" name="ruc" value="<c:out value='${ruc}'/>" inputmode="numeric" autocomplete="off" minlength="13" maxlength="13" pattern="[0-9]{13}" required aria-describedby="modal-ruc-hint">
+                            <p class="field-hint" id="modal-ruc-hint">13 dígitos, sin espacios. Ejemplo: 1754303699001.</p>
+                        </div>
+                        <div class="input-group">
+                            <label for="modal-code">Código interno <span class="field-required" aria-hidden="true">*</span></label>
+                            <input type="text" id="modal-code" name="code" value="<c:out value='${code}'/>" autocomplete="off" minlength="4" maxlength="4" pattern="[A-Z]{2}[0-9]{2}" required aria-describedby="modal-code-hint">
+                            <p class="field-hint" id="modal-code-hint">Ejemplo: AB12.</p>
+                        </div>
+                        <div class="input-group company-register-full-field">
+                            <label for="modal-email">Correo corporativo <span class="field-required" aria-hidden="true">*</span></label>
+                            <input type="email" id="modal-email" name="email" value="<c:out value='${email}'/>" autocomplete="email" required>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="company-cancel-button" id="modal-cancel">Cancelar</button>
+                <button type="submit" class="companies-add-button" id="modal-submit" form="modal-register-form">Registrar empresa</button>
+            </div>
+        </div>
+    </div>
 </main>
+<script src="${pageContext.request.contextPath}/resources/js/companies/modal.js"></script>
+<c:if test="${showRegisterModal}">
+    <script>document.getElementById("register-modal").hidden = false;</script>
+</c:if>
 </body>
 </html>
