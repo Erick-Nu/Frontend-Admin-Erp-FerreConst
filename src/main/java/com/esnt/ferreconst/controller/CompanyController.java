@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -64,20 +63,5 @@ public class CompanyController {
             model.addAttribute("companyPage", companyService.search(auth, null, 1));
             return "companies/index";
         }
-    }
-
-    @GetMapping("/companies/{companyId}")
-    public String readCompany(@PathVariable String companyId, HttpSession session, Model model) {
-        AuthResponse auth = (AuthResponse) session.getAttribute("auth");
-        if (auth == null) {
-            return "redirect:/login";
-        }
-        model.addAttribute("user", auth.getUser());
-        try {
-            model.addAttribute("company", companyService.searchById(auth, companyId));
-        } catch (RuntimeException e) {
-            model.addAttribute("error", e.getMessage());
-        }
-        return "companies/detail";
     }
 }

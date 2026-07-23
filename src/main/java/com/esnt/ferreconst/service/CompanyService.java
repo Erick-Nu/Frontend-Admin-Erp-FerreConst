@@ -6,7 +6,6 @@ import com.esnt.ferreconst.dto.response.company.CompanyResponseDto;
 import com.esnt.ferreconst.dto.response.ErrorResponseDto;
 import com.esnt.ferreconst.mapper.CompanyMapper;
 import com.esnt.ferreconst.model.AuthResponse;
-import com.esnt.ferreconst.model.company.Company;
 import com.esnt.ferreconst.model.company.CompanyPage;
 import com.esnt.ferreconst.model.TokenResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -148,54 +147,6 @@ public class CompanyService {
         HttpEntity<Void> entity = new HttpEntity<>(headers);
         ResponseEntity<CompanyPageResponseDto> response = rest.exchange(
                 url.build().encode().toUriString(), HttpMethod.GET, entity, CompanyPageResponseDto.class);
-        return response.getBody();
-    }
-
-    public Company searchById(AuthResponse auth, String id) {
-        try {
-            log.info("Buscando empresa por ID: " + id);
-            CompanyResponseDto dto;
-            try {
-                dto = sendSearchByIdRequest(auth, id);
-            } catch (HttpClientErrorException.Unauthorized e) {
-                TokenResponse tokens = authService.refresh(auth.getRefreshToken());
-                auth.setAccessToken(tokens.getAccessToken());
-                auth.setRefreshToken(tokens.getRefreshToken());
-                dto = sendSearchByIdRequest(auth, id);
-            }
-            return mapper.toCompany(dto);
-        } catch (HttpStatusCodeException e) {
-            String message = e.getStatusText();
-            String body = e.getResponseBodyAsString();
-
-            if (body != null && !body.trim().isEmpty()) {
-                try {
-                    ErrorResponseDto error = objectMapper.readValue(body, ErrorResponseDto.class);
-                    if (error.getMessage() != null && !error.getMessage().trim().isEmpty()) {
-                        message = error.getMessage();
-                    }
-                } catch (JsonProcessingException ignored) {
-                    log.warning("No se pudo interpretar el body de error de la API");
-                }
-            }
-
-            log.log(Level.SEVERE, "Error al buscar empresa por ID: " + message, e);
-            throw new RuntimeException(message, e);
-        } catch (Exception e) {
-            String message = e.getMessage() != null ? e.getMessage() : "Error al buscar empresa por ID";
-            log.log(Level.SEVERE, "Error al buscar empresa por ID: " + message, e);
-            throw new RuntimeException(message, e);
-        }
-    }
-
-    private CompanyResponseDto sendSearchByIdRequest(AuthResponse auth, String id) {
-        String url = COMPANY_URL + "/" + id;
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(auth.getAccessToken());
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-        ResponseEntity<CompanyResponseDto> response = rest.exchange(
-                url, HttpMethod.GET, entity, CompanyResponseDto.class);
         return response.getBody();
     }
 
