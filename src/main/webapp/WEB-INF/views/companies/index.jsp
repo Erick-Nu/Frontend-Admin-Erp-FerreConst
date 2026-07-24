@@ -11,6 +11,15 @@
 <body>
 <jsp:include page="../components/navbar.jsp"/>
 <main class="main-content">
+
+    <c:if test="${not empty message or not empty error}">
+        <div id="companies-toast" class="companies-toast" hidden role="alert">
+            <span id="companies-toast-icon" class="companies-toast-icon"></span>
+            <span id="companies-toast-message" class="companies-toast-message"></span>
+            <button type="button" class="companies-toast-close" id="companies-toast-close" aria-label="Cerrar">&times;</button>
+        </div>
+    </c:if>
+
     <div class="page-container companies-container">
         <header class="companies-header">
             <div>
@@ -24,10 +33,6 @@
             <input type="search" id="company-search" name="query" value="<c:out value='${query}'/>" placeholder="RUC, código o razón social" aria-label="Buscar empresa">
             <button class="companies-search-button" type="submit">Buscar</button>
         </form>
-
-        <c:if test="${not empty error}">
-            <div class="alert alert-error companies-alert" role="alert"><c:out value="${error}"/></div>
-        </c:if>
 
         <c:if test="${empty error}">
             <section class="companies-table-section" aria-labelledby="companies-table-title">
@@ -52,6 +57,7 @@
                                         <th scope="col">Código</th>
                                         <th scope="col">Estado</th>
                                         <th scope="col">Registro</th>
+                                        <th scope="col">Estado</th>
                                         <th scope="col" class="companies-table-actions-header">Acciones</th>
                                     </tr>
                                 </thead>
@@ -69,12 +75,26 @@
                                             <td><c:out value="${company.email}"/></td>
                                             <td><c:out value="${company.code}"/></td>
                                             <td>
-                                                <c:choose>
-                                                    <c:when test="${company.status eq 'activo'}"><span class="status-badge status-active"><c:out value="${company.status}"/></span></c:when>
-                                                    <c:otherwise><span class="status-badge"><c:out value="${company.status}"/></span></c:otherwise>
-                                                </c:choose>
+<c:choose>
+                                                        <c:when test="${company.status eq 'activo'}"><span class="status-badge status-active"><c:out value="${company.status}"/></span></c:when>
+                                                        <c:when test="${company.status eq 'inactivo'}"><span class="status-badge status-inactive"><c:out value="${company.status}"/></span></c:when>
+                                                        <c:when test="${company.status eq 'eliminado'}"><span class="status-badge status-removed"><c:out value="${company.status}"/></span></c:when>
+                                                        <c:otherwise><span class="status-badge"><c:out value="${company.status}"/></span></c:otherwise>
+                                                    </c:choose>
                                             </td>
                                             <td><c:out value="${company.formattedDateRegister}"/></td>
+                                            <td>
+                                                <form class="status-form" action="${pageContext.request.contextPath}/companies/${company.id}/status" method="post">
+                                                    <input type="hidden" name="query" value="<c:out value='${query}'/>">
+                                                    <input type="hidden" name="page" value="<c:out value='${page}'/>">
+                                                    <select class="status-select" name="status" aria-label="Cambiar estado">
+                                                        <option value="activo" ${company.status eq 'activo' ? 'selected' : ''}>Activo</option>
+                                                        <option value="inactivo" ${company.status eq 'inactivo' ? 'selected' : ''}>Inactivo</option>
+                                                        <option value="eliminado" ${company.status eq 'eliminado' ? 'selected' : ''}>Eliminado</option>
+                                                    </select>
+                                                    <button class="status-update-button" type="submit">Actualizar</button>
+                                                </form>
+                                            </td>
                                             <td class="companies-table-actions">
                                                 <a class="companies-settings-button" href="${pageContext.request.contextPath}/companies/${company.id}/configurations">Configuración</a>
                                             </td>
@@ -164,6 +184,15 @@
     </div>
 </main>
 <script src="${pageContext.request.contextPath}/resources/js/companies/modal.js"></script>
+<script src="${pageContext.request.contextPath}/resources/js/companies/status.js"></script>
+<script>
+    <c:if test="${not empty message}">
+        showToast("success", "<c:out value='${message}'/>");
+    </c:if>
+    <c:if test="${not empty error}">
+        showToast("error", "<c:out value='${error}'/>");
+    </c:if>
+</script>
 <c:if test="${showRegisterModal}">
     <script>document.getElementById("register-modal").hidden = false;</script>
 </c:if>
