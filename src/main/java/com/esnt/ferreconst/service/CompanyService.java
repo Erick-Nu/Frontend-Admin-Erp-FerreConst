@@ -1,9 +1,11 @@
 package com.esnt.ferreconst.service;
 
 import com.esnt.ferreconst.dto.request.company.CreateCompanyRequestDto;
+import com.esnt.ferreconst.dto.request.company.UpdateCompanyStatusRequestDto;
 import com.esnt.ferreconst.dto.response.company.CompanyPageResponseDto;
 import com.esnt.ferreconst.dto.response.company.CompanyResponseDto;
 import com.esnt.ferreconst.dto.response.ErrorResponseDto;
+import com.esnt.ferreconst.dto.response.MessageResponseDto;
 import com.esnt.ferreconst.mapper.CompanyMapper;
 import com.esnt.ferreconst.model.AuthResponse;
 import com.esnt.ferreconst.model.company.CompanyPage;
@@ -15,6 +17,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -31,7 +34,7 @@ public class CompanyService {
     private static final String COMPANY_URL = "https://api.ferreconst.space/companies";
     private static final int DEFAULT_PAGE_SIZE = 10;
 
-    private final RestTemplate rest = new RestTemplate();
+    private final RestTemplate rest = new RestTemplate(new HttpComponentsClientHttpRequestFactory());
 
     @Autowired
     private CompanyMapper mapper;
@@ -147,6 +150,57 @@ public class CompanyService {
         HttpEntity<Void> entity = new HttpEntity<>(headers);
         ResponseEntity<CompanyPageResponseDto> response = rest.exchange(
                 url.build().encode().toUriString(), HttpMethod.GET, entity, CompanyPageResponseDto.class);
+        return response.getBody();
+    }
+
+    public MessageResponseDto updateStatus(AuthResponse auth, String companyId, String status) {
+        UpdateCompanyStatusRequestDto request = new UpdateCompanyStatusRequestDto();
+        request.setStatus(status);
+
+        try {
+            log.info("Actualizando estado de empresa: " + companyId + " a " + status);
+            MessageResponseDto dto;
+            try {
+                dto = sendUpdateStatusRequest(auth, companyId, request);
+            } catch (HttpClientErrorException.Unauthorized e) {
+                TokenResponse tokens = authService.refresh(auth.getRefreshToken());
+                auth.setAccessToken(tokens.getAccessToken());
+                auth.setRefreshToken(tokens.getRefreshToken());
+                dto = sendUpdateStatusRequest(auth, companyId, request);
+            }
+            log.info("Estado actualizado exitosamente: " + dto.getMessage());
+            return dto;
+        } catch (HttpStatusCodeException e) {
+            String message = e.getStatusText();
+            String body = e.getResponseBodyAsString();
+
+            if (body != null && !body.trim().isEmpty()) {
+                try {
+                    ErrorResponseDto error = objectMapper.readValue(body, ErrorResponseDto.class);
+                    if (error.getMessage() != null && !error.getMessage().trim().isEmpty()) {
+                        message = error.getMessage();
+                    }
+                } catch (JsonProcessingException ignored) {
+                    log.warning("No se pudo interpretar el body de error de la API");
+                }
+            }
+
+            log.log(Level.SEVERE, "Error al actualizar estado de empresa: " + message, e);
+            throw new RuntimeException(message, e);
+        } catch (Exception e) {
+            String message = e.getMessage() != null ? e.getMessage() : "Error al actualizar estado de empresa";
+            log.log(Level.SEVERE, "Error al actualizar estado de empresa: " + message, e);
+            throw new RuntimeException(message, e);
+        }
+    }
+
+    private MessageResponseDto sendUpdateStatusRequest(AuthResponse auth, String companyId, UpdateCompanyStatusRequestDto request) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(auth.getAccessToken());
+
+        HttpEntity<UpdateCompanyStatusRequestDto> entity = new HttpEntity<>(request, headers);
+        String url = COMPANY_URL + "/" + companyId + "/status";
+        ResponseEntity<MessageResponseDto> response = rest.exchange(url, HttpMethod.PATCH, entity, MessageResponseDto.class);
         return response.getBody();
     }
 
